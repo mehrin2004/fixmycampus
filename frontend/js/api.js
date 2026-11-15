@@ -1,5 +1,5 @@
 // Base URL: since the frontend is served by the same Express server, relative paths work.
-// If you serve the frontend separately (e.g. Live Server), change this to 'http://localhost:5000'.
+// If you serve the frontend separately (e.g. Live Server), change this to 'http://localhost:4000'.
 const API_BASE = '';
 
 // Register the service worker so the app is installable and has an offline app shell across all networks.

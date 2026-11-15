@@ -106,15 +106,49 @@
 
         <div class="form-group">
           <label>Attach Photo Proof <span style="font-weight:400; color:var(--text-muted);">(Recommended)</span></label>
-          <div class="upload-box" id="uploadBox" onclick="document.getElementById('photoInput').click()">
+          
+          <!-- Empty State Box -->
+          <div class="upload-box" id="uploadBox">
             <div id="uploadPlaceholder">
               <div class="camera-icon">📷</div>
-              <div style="font-weight:700; color:var(--navy); font-size:14px;">Tap to upload photo proof</div>
-              <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Supports JPG, PNG (Max 5MB)</div>
+              <div style="font-weight:700; color:var(--navy); font-size:15px; margin-bottom:4px;">Attach Photo of Issue</div>
+              <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">Snap a live photo with camera or choose from gallery</div>
+              
+              <div class="upload-action-buttons">
+                <label for="cameraInput" class="upload-btn upload-btn-camera">
+                  <span>📸</span> Open Camera
+                </label>
+                <label for="galleryInput" class="upload-btn upload-btn-gallery">
+                  <span>🖼️</span> Device Gallery
+                </label>
+              </div>
+              <div style="font-size:11.5px; color:var(--text-muted); margin-top:12px;">Supports JPG, PNG, WEBP (Max 5MB)</div>
             </div>
-            <img id="previewImg" class="preview" style="display:none;" alt="Photo Preview">
           </div>
-          <input type="file" id="photoInput" accept="image/*" style="display:none;">
+
+          <!-- Hidden Native Inputs (accessible to OS intents, not display:none) -->
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="visually-hidden-file-input">
+          <input type="file" id="galleryInput" accept="image/*" class="visually-hidden-file-input">
+
+          <!-- Photo Preview Card (Shown after selection) -->
+          <div id="previewCard" class="preview-card" style="display:none;">
+            <div class="preview-img-wrap">
+              <img id="previewImg" class="preview" alt="Photo Preview" title="Tap to zoom">
+              <span class="preview-zoom-badge">🔍 Tap to zoom</span>
+            </div>
+            <div class="preview-meta">
+              <div class="preview-info">
+                <span class="preview-badge">✅ Photo Ready</span>
+                <span id="previewFileName" class="preview-filename">photo.jpg</span>
+                <span id="previewFileSize" class="preview-filesize">1.2 MB</span>
+              </div>
+              <div class="preview-actions">
+                <label for="cameraInput" class="btn-subtle" title="Retake with Camera">📸 Retake</label>
+                <label for="galleryInput" class="btn-subtle" title="Choose from Gallery">🖼️ Change</label>
+                <button type="button" class="btn-subtle btn-remove" id="removePhotoBtn" title="Remove Photo">🗑️ Remove</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary" id="submitBtn" style="margin-top: 10px;">Submit Complaint Ticket</button>
@@ -146,25 +180,60 @@
       }
     }
 
-    const photoInput = document.getElementById('photoInput');
-    photoInput.addEventListener('change', () => {
-      const file = photoInput.files[0];
+    let selectedPhotoFile = null;
+    const cameraInput = document.getElementById('cameraInput');
+    const galleryInput = document.getElementById('galleryInput');
+    const uploadBox = document.getElementById('uploadBox');
+    const previewCard = document.getElementById('previewCard');
+    const previewImg = document.getElementById('previewImg');
+    const previewFileName = document.getElementById('previewFileName');
+    const previewFileSize = document.getElementById('previewFileSize');
+    const removePhotoBtn = document.getElementById('removePhotoBtn');
+
+    function handleFileSelected(file) {
       if (!file) return;
 
       if (file.size > 5 * 1024 * 1024) {
         Toast.error('Selected image size exceeds 5MB limit. Please select a smaller photo.');
-        photoInput.value = '';
+        cameraInput.value = '';
+        galleryInput.value = '';
         return;
       }
 
+      selectedPhotoFile = file;
       const reader = new FileReader();
       reader.onload = (e) => {
-        document.getElementById('previewImg').src = e.target.result;
-        document.getElementById('previewImg').style.display = 'block';
-        document.getElementById('uploadPlaceholder').style.display = 'none';
+        previewImg.src = e.target.result;
+        previewFileName.textContent = file.name || 'photo.jpg';
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        previewFileSize.textContent = `${sizeMb} MB`;
+        uploadBox.style.display = 'none';
+        previewCard.style.display = 'block';
         Toast.info('Photo proof attached successfully 📷');
       };
       reader.readAsDataURL(file);
+    }
+
+    cameraInput.addEventListener('change', () => {
+      if (cameraInput.files && cameraInput.files[0]) {
+        handleFileSelected(cameraInput.files[0]);
+      }
+    });
+
+    galleryInput.addEventListener('change', () => {
+      if (galleryInput.files && galleryInput.files[0]) {
+        handleFileSelected(galleryInput.files[0]);
+      }
+    });
+
+    removePhotoBtn.addEventListener('click', () => {
+      selectedPhotoFile = null;
+      cameraInput.value = '';
+      galleryInput.value = '';
+      previewImg.src = '';
+      previewCard.style.display = 'none';
+      uploadBox.style.display = 'block';
+      Toast.info('Photo removed.');
     });
 
     const titleEl = document.getElementById('title');
@@ -316,7 +385,7 @@
       formData.append('category', data.category);
       formData.append('description', data.description);
       formData.append('location', data.location);
-      if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
+      if (selectedPhotoFile) formData.append('photo', selectedPhotoFile);
 
       try {
         await Api.createComplaint(formData);

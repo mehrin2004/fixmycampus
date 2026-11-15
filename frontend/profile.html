@@ -24,11 +24,11 @@
 
     <div class="content">
       <div class="avatar-wrap" style="text-align: center; margin-bottom: 20px;">
-        <div style="position: relative; width: 88px; height: 88px; margin: 0 auto; cursor: pointer;" onclick="document.getElementById('avatarInput').click();" title="Click to Upload Profile Photo">
+        <label for="avatarInput" style="display: block; position: relative; width: 88px; height: 88px; margin: 0 auto; cursor: pointer;" title="Tap to Upload Profile Photo">
           <div class="avatar-circle" id="avatarCircle" style="background: var(--hero-gradient); color:#fff; font-size: 38px; width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(5, 150, 105, 0.25); border: 3px solid var(--primary); overflow: hidden;">👤</div>
           <div style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">📷</div>
-        </div>
-        <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatarUpload(this)">
+        </label>
+        <input type="file" id="avatarInput" accept="image/*" class="visually-hidden-file-input" onchange="handleAvatarUpload(this)">
         <div class="user-role-badge mt-8" style="font-size: 12px; font-weight: 800; color: var(--primary-dark); background: var(--primary-light); display: inline-block; padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(5,150,105,0.2);">User Profile</div>
       </div>
 

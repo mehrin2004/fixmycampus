@@ -1,0 +1,24 @@
+{
+  "name": "fixmycampus",
+  "version": "1.0.0",
+  "description": "FixMyCampus - Full-Stack Campus Complaint Reporting & Management System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "cd backend && npm install",
+    "postinstall": "cd backend && npm install",
+    "check-db": "cd backend && npm run check-db"
+  },
+  "keywords": [
+    "campus",
+    "complaint-management",
+    "express",
+    "nodejs",
+    "mysql"
+  ],
+  "author": "Mehrin",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -94,35 +94,101 @@
 
           <div class="form-group">
             <label>${c.resolution_photo_url ? 'Upload / Replace Resolution Photo' : 'Upload Resolution / Problem Solved Photo'} <span style="font-weight:400; color:var(--text-muted);">(Shows proof to student)</span></label>
-            <div class="upload-box" id="resUploadBox" onclick="document.getElementById('resPhotoInput').click()">
+            
+            <div class="upload-box" id="resUploadBox">
               <div id="resPlaceholder">
                 <div class="camera-icon" style="background:var(--completed-bg); color:var(--completed-text);">📸</div>
-                <div style="font-weight:700; color:var(--navy); font-size:14px;">${c.resolution_photo_url ? 'Tap to select a new resolution photo' : 'Tap to upload solution proof photo'}</div>
-                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Upload photo of fixed equipment / area</div>
-              </div>
-              <div id="resPreviewContainer" style="display:none; text-align:center;">
-                <img id="resPreviewImg" class="preview" alt="New Resolution Preview" style="max-height:180px; width:100%; border-radius:12px; object-fit:cover; margin-bottom:8px;">
-                <div style="font-size:12px; font-weight:700; color:var(--primary);">✏️ New Photo Selected — Tap button below to save</div>
+                <div style="font-weight:700; color:var(--navy); font-size:15px; margin-bottom:4px;">${c.resolution_photo_url ? 'Upload New Resolution Proof' : 'Upload Solution Proof Photo'}</div>
+                <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">Snap photo of fixed equipment or select from gallery</div>
+                <div class="upload-action-buttons">
+                  <label for="resCameraInput" class="upload-btn upload-btn-camera">
+                    <span>📸</span> Open Camera
+                  </label>
+                  <label for="resGalleryInput" class="upload-btn upload-btn-gallery">
+                    <span>🖼️</span> Device Gallery
+                  </label>
+                </div>
               </div>
             </div>
-            <input type="file" id="resPhotoInput" accept="image/*" style="display:none;">
+
+            <input type="file" id="resCameraInput" accept="image/*" capture="environment" class="visually-hidden-file-input">
+            <input type="file" id="resGalleryInput" accept="image/*" class="visually-hidden-file-input">
+
+            <div id="resPreviewCard" class="preview-card" style="display:none;">
+              <div class="preview-img-wrap">
+                <img id="resPreviewImg" class="preview" alt="New Resolution Preview" title="Tap to zoom">
+                <span class="preview-zoom-badge">🔍 Tap to zoom</span>
+              </div>
+              <div class="preview-meta">
+                <div class="preview-info">
+                  <span class="preview-badge">✅ New Resolution Photo</span>
+                  <span id="resPreviewFileName" class="preview-filename">photo.jpg</span>
+                  <span id="resPreviewFileSize" class="preview-filesize">1.2 MB</span>
+                </div>
+                <div class="preview-actions">
+                  <label for="resCameraInput" class="btn-subtle" title="Retake with Camera">📸 Retake</label>
+                  <label for="resGalleryInput" class="btn-subtle" title="Choose from Gallery">🖼️ Change</label>
+                  <button type="button" class="btn-subtle btn-remove" id="resRemovePhotoBtn" title="Remove Photo">🗑️ Remove</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button class="btn btn-primary" id="updateBtn">Update Ticket Status & Save Photo</button>
         `;
 
-        const resPhotoInput = document.getElementById('resPhotoInput');
-        resPhotoInput.addEventListener('change', () => {
-          const file = resPhotoInput.files[0];
+        let selectedResPhotoFile = null;
+        const resCameraInput = document.getElementById('resCameraInput');
+        const resGalleryInput = document.getElementById('resGalleryInput');
+        const resUploadBox = document.getElementById('resUploadBox');
+        const resPreviewCard = document.getElementById('resPreviewCard');
+        const resPreviewImg = document.getElementById('resPreviewImg');
+        const resPreviewFileName = document.getElementById('resPreviewFileName');
+        const resPreviewFileSize = document.getElementById('resPreviewFileSize');
+        const resRemovePhotoBtn = document.getElementById('resRemovePhotoBtn');
+
+        function handleResFileSelected(file) {
           if (!file) return;
+          if (file.size > 5 * 1024 * 1024) {
+            Toast.error('Selected image size exceeds 5MB limit. Please select a smaller photo.');
+            resCameraInput.value = '';
+            resGalleryInput.value = '';
+            return;
+          }
+          selectedResPhotoFile = file;
           const reader = new FileReader();
           reader.onload = (e) => {
-            document.getElementById('resPreviewImg').src = e.target.result;
-            document.getElementById('resPreviewContainer').style.display = 'block';
-            document.getElementById('resPlaceholder').style.display = 'none';
+            resPreviewImg.src = e.target.result;
+            resPreviewFileName.textContent = file.name || 'resolution.jpg';
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+            resPreviewFileSize.textContent = `${sizeMb} MB`;
+            resUploadBox.style.display = 'none';
+            resPreviewCard.style.display = 'block';
             Toast.info('New resolution photo selected 📸 — Click save to update');
           };
           reader.readAsDataURL(file);
+        }
+
+        resCameraInput.addEventListener('change', () => {
+          if (resCameraInput.files && resCameraInput.files[0]) {
+            handleResFileSelected(resCameraInput.files[0]);
+          }
+        });
+
+        resGalleryInput.addEventListener('change', () => {
+          if (resGalleryInput.files && resGalleryInput.files[0]) {
+            handleResFileSelected(resGalleryInput.files[0]);
+          }
+        });
+
+        resRemovePhotoBtn.addEventListener('click', () => {
+          selectedResPhotoFile = null;
+          resCameraInput.value = '';
+          resGalleryInput.value = '';
+          resPreviewImg.src = '';
+          resPreviewCard.style.display = 'none';
+          resUploadBox.style.display = 'block';
+          Toast.info('Resolution photo removed.');
         });
 
         document.getElementById('updateBtn').addEventListener('click', async () => {
@@ -135,8 +201,8 @@
             const formData = new FormData();
             formData.append('status', document.getElementById('statusSelect').value);
             formData.append('assignedStaff', document.getElementById('staffSelect').value);
-            if (resPhotoInput.files[0]) {
-              formData.append('resolutionPhoto', resPhotoInput.files[0]);
+            if (selectedResPhotoFile) {
+              formData.append('resolutionPhoto', selectedResPhotoFile);
             }
 
             await Api.updateComplaint(id, formData, true);

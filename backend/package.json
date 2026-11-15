@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "init-db": "node scripts/import-cloud-db.js"
+    "init-db": "node scripts/import-cloud-db.js",
+    "check-db": "node scripts/check-db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
